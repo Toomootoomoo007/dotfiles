@@ -1,0 +1,37 @@
+{
+  "version": 2,
+  "plugins": {
+    "superpowers@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/aokitomohiro/.claude/plugins/cache/claude-plugins-official/superpowers/5.1.0",
+        "version": "5.1.0",
+        "installedAt": "2026-05-24T13:14:46.859Z",
+        "lastUpdated": "2026-05-24T13:14:46.859Z",
+        "gitCommitSha": "f2cbfbefebbfef77321e4c9abc9e949826bea9d7"
+      }
+    ],
+    "arscontexta@agenticnotetaking": [
+      {
+        "scope": "project",
+        "projectPath": "/Users/aokitomohiro/Documents/Obsidian Vault",
+        "installPath": "/Users/aokitomohiro/.claude/plugins/cache/agenticnotetaking/arscontexta/0.8.0",
+        "version": "0.8.0",
+        "installedAt": "2026-05-24T23:05:54.161Z",
+        "lastUpdated": "2026-05-24T23:05:54.161Z",
+        "gitCommitSha": "2acfd5cc4473c4d06c46be63df748e77e00e2746"
+      }
+    ],
+    "obsidian@obsidian-skills": [
+      {
+        "scope": "project",
+        "installPath": "/Users/aokitomohiro/.claude/plugins/cache/obsidian-skills/obsidian/1.0.1",
+        "version": "1.0.1",
+        "installedAt": "2026-05-25T10:23:38.616Z",
+        "lastUpdated": "2026-05-25T10:23:38.616Z",
+        "gitCommitSha": "553ef99aa3306dd23f268e1ba9af752577684f69",
+        "projectPath": "/Users/aokitomohiro/Documents/Obsidian Vault"
+      }
+    ]
+  }
+}

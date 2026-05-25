@@ -1,0 +1,26 @@
+{
+  "claude-plugins-official": {
+    "source": {
+      "source": "github",
+      "repo": "anthropics/claude-plugins-official"
+    },
+    "installLocation": "/Users/aokitomohiro/.claude/plugins/marketplaces/claude-plugins-official",
+    "lastUpdated": "2026-05-25T10:19:05.474Z"
+  },
+  "agenticnotetaking": {
+    "source": {
+      "source": "github",
+      "repo": "agenticnotetaking/arscontexta"
+    },
+    "installLocation": "/Users/aokitomohiro/.claude/plugins/marketplaces/agenticnotetaking",
+    "lastUpdated": "2026-05-24T23:04:55.198Z"
+  },
+  "obsidian-skills": {
+    "source": {
+      "source": "github",
+      "repo": "kepano/obsidian-skills"
+    },
+    "installLocation": "/Users/aokitomohiro/.claude/plugins/marketplaces/obsidian-skills",
+    "lastUpdated": "2026-05-25T10:18:39.614Z"
+  }
+}
