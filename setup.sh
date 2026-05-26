@@ -5,7 +5,6 @@ set -e
 DOTFILES_DIR="$(cd "$(dirname "$0")" && pwd)"
 CLAUDE_DIR="$HOME/.claude"
 
-# ── OS判定 ────────────────────────────────────────────────────────────────
 IS_WSL=false
 IS_MAC=false
 if grep -qi microsoft /proc/version 2>/dev/null; then
@@ -21,7 +20,6 @@ $IS_WSL && echo "環境:     WSL2"
 $IS_MAC && echo "環境:     macOS"
 echo ""
 
-# ── WSL2: 改行コード対策 ──────────────────────────────────────────────────
 if $IS_WSL; then
   echo "--- WSL2: 改行コード正規化 ---"
   git -C "$DOTFILES_DIR" config core.autocrlf false
@@ -36,12 +34,10 @@ if $IS_WSL; then
   echo ""
 fi
 
-# ── ~/.claude ディレクトリの準備 ──────────────────────────────────────────
 mkdir -p "$CLAUDE_DIR/skills"
 mkdir -p "$CLAUDE_DIR/commands"
 mkdir -p "$CLAUDE_DIR/plugins"
 
-# ── シムリンク作成関数 ────────────────────────────────────────────────────
 link() {
   local src="$1"
   local dst="$2"
@@ -57,7 +53,6 @@ link() {
   echo "  linked: $dst → $src"
 }
 
-# ── Windowsへのコピー関数 ─────────────────────────────────────────────────
 win_copy() {
   local src="$1"
   local dst="$2"
@@ -71,19 +66,16 @@ win_copy() {
 }
 
 echo "--- Claude Code 設定 (symlink) ---"
-link "$DOTFILES_DIR/claude/settings.json"                    "$CLAUDE_DIR/settings.json"
-link "$DOTFILES_DIR/claude/commands/diary.md"                "$CLAUDE_DIR/commands/diary.md"
-link "$DOTFILES_DIR/claude/plugins/known_marketplaces.json"  "$CLAUDE_DIR/plugins/known_marketplaces.json"
-link "$DOTFILES_DIR/claude/plugins/installed_plugins.json"   "$CLAUDE_DIR/plugins/installed_plugins.json"
+link "$DOTFILES_DIR/claude/settings.json"                   "$CLAUDE_DIR/settings.json"
+link "$DOTFILES_DIR/claude/commands/diary.md"               "$CLAUDE_DIR/commands/diary.md"
+link "$DOTFILES_DIR/claude/plugins/known_marketplaces.json" "$CLAUDE_DIR/plugins/known_marketplaces.json"
 
-# skills は自動で全リンク
 for skill_src in "$DOTFILES_DIR/claude/skills"/*/; do
   skill_name=$(basename "$skill_src")
   link "$skill_src" "$CLAUDE_DIR/skills/$skill_name"
 done
 echo ""
 
-# ── WSL2: Windows側にコピー ───────────────────────────────────────────────
 if $IS_WSL; then
   echo "--- Windows側 .claude に同期 ---"
   WIN_USER=$(cmd.exe /c "echo %USERNAME%" 2>/dev/null | tr -d '\r\n')
@@ -95,9 +87,7 @@ if $IS_WSL; then
     win_copy "$DOTFILES_DIR/claude/settings.json"                   "$WIN_CLAUDE/settings.json"
     win_copy "$DOTFILES_DIR/claude/commands/diary.md"               "$WIN_CLAUDE/commands/diary.md"
     win_copy "$DOTFILES_DIR/claude/plugins/known_marketplaces.json" "$WIN_CLAUDE/plugins/known_marketplaces.json"
-    win_copy "$DOTFILES_DIR/claude/plugins/installed_plugins.json"  "$WIN_CLAUDE/plugins/installed_plugins.json"
 
-    # skills は自動で全コピー
     for skill_src in "$DOTFILES_DIR/claude/skills"/*/; do
       skill_name=$(basename "$skill_src")
       win_copy "$skill_src" "$WIN_CLAUDE/skills/$skill_name"
@@ -113,8 +103,7 @@ fi
 echo "=== 完了 ==="
 echo ""
 echo "次のステップ:"
-echo "  1. claude を起動してプラグインを再インストール:"
+echo "  pluginは各環境で手動インストール:"
 echo "     /plugin install superpowers@claude-plugins-official"
 echo "     /plugin install arscontexta@agenticnotetaking  (vault プロジェクト内で)"
 echo "     /plugin install obsidian@obsidian-skills       (vault プロジェクト内で)"
-echo "  2. /reload-plugins を実行"
