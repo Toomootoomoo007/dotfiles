@@ -4,7 +4,7 @@
 
 VAULT_PATH="/Users/aokitomohiro/Documents/Obsidian Vault"
 TODAY=$(date +%Y-%m-%d)
-FILE="$VAULT_PATH/20_Areas/01_diary/00-inbox/$TODAY.md"
+FILE="$VAULT_PATH/00_INBOX/$TODAY.md"
 
 1. ファイルが存在しない場合、以下のテンプレートで作成する：
 
