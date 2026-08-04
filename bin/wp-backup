@@ -1,0 +1,241 @@
+#!/usr/bin/env bash
+# wp-backup — WordPress サイトのリモートDB / uploads をローカルにバックアップする対話型CLI
+# Mac / WSL 共通。サイト定義は ~/.config/wp-backup/sites/*.conf
+#
+# 使い方:
+#   wp-backup                          # 対話
+#   wp-backup --site nigawa --mode full
+#   wp-backup --site nigawa --mode db --dest ~/Backups/wp/nigawa/manual
+#
+# ローカルの Docker / WP は変更しない（sync とは別物）。
+
+set -euo pipefail
+
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/wp-backup"
+SITES_DIR="${CONFIG_DIR}/sites"
+DEFAULT_ROOT="${HOME}/Backups/wp"
+
+SITE_ID=""
+MODE=""
+DEST=""
+YES=0
+
+usage() {
+  cat <<'EOF'
+Usage: wp-backup [--site ID] [--mode db|full] [--dest DIR] [--yes]
+
+  --site ID    サイトID（~/.config/wp-backup/sites/ID.conf）
+  --mode MODE  db = SQLのみ / full = SQL + uploads
+  --dest DIR   保存先ディレクトリ（省略時は対話 or デフォルト）
+  --yes        確認プロンプトをスキップ
+  -h, --help   このヘルプ
+
+引数を省略した項目は対話で尋ねます。
+EOF
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --site) SITE_ID="${2:-}"; shift 2 ;;
+    --mode) MODE="${2:-}"; shift 2 ;;
+    --dest) DEST="${2:-}"; shift 2 ;;
+    --yes|-y) YES=1; shift ;;
+    -h|--help) usage; exit 0 ;;
+    *) echo "不明な引数: $1" >&2; usage; exit 1 ;;
+  esac
+done
+
+expand_path() {
+  local p="$1"
+  if [[ "$p" == ~* ]]; then
+    p="${p/#\~/$HOME}"
+  fi
+  echo "$p"
+}
+
+list_sites() {
+  local f id
+  shopt -s nullglob
+  for f in "${SITES_DIR}"/*.conf; do
+    id="$(basename "$f" .conf)"
+    # shellcheck disable=SC1090
+    LABEL=""
+    source "$f"
+    printf '%s\t%s\n' "$id" "${LABEL:-$id}"
+  done
+  shopt -u nullglob
+}
+
+prompt_site() {
+  local sites=() labels=() line id label i choice
+  while IFS=$'\t' read -r id label; do
+    [[ -z "$id" ]] && continue
+    sites+=("$id")
+    labels+=("$label")
+  done < <(list_sites)
+
+  if [[ ${#sites[@]} -eq 0 ]]; then
+    echo "エラー: ${SITES_DIR} にサイト設定 (*.conf) がありません。" >&2
+    echo "例: ${SITES_DIR}/nigawa.conf （dotfiles の site.example.conf を参照）" >&2
+    exit 1
+  fi
+
+  echo "バックアップするサイトを選んでください:"
+  for i in "${!sites[@]}"; do
+    printf "  %d) %s (%s)\n" "$((i + 1))" "${labels[$i]}" "${sites[$i]}"
+  done
+  while true; do
+    read -r -p "> " choice
+    if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#sites[@]} )); then
+      SITE_ID="${sites[$((choice - 1))]}"
+      return
+    fi
+    echo "番号を入力してください。"
+  done
+}
+
+prompt_mode() {
+  local choice
+  echo "バックアップの種類:"
+  echo "  1) db   — データベース（SQL）のみ"
+  echo "  2) full — データベース + uploads（メディア）"
+  while true; do
+    read -r -p "> " choice
+    case "$choice" in
+      1|db) MODE="db"; return ;;
+      2|full) MODE="full"; return ;;
+      *) echo "1 または 2 を入力してください。" ;;
+    esac
+  done
+}
+
+prompt_dest() {
+  local default="$1" input
+  read -r -p "保存先 [${default}]: " input
+  if [[ -z "$input" ]]; then
+    DEST="$default"
+  else
+    DEST="$(expand_path "$input")"
+  fi
+}
+
+load_site() {
+  local conf="${SITES_DIR}/${SITE_ID}.conf"
+  if [[ ! -f "$conf" ]]; then
+    echo "エラー: サイト設定が見つかりません: $conf" >&2
+    exit 1
+  fi
+  # shellcheck disable=SC1090
+  source "$conf"
+
+  : "${SSH_HOST:?SSH_HOST が未設定です ($conf)}"
+  : "${DB_CREDENTIALS:?DB_CREDENTIALS が未設定です ($conf)}"
+  DB_CREDENTIALS="$(expand_path "$DB_CREDENTIALS")"
+  DEFAULT_BACKUP_DIR="$(expand_path "${DEFAULT_BACKUP_DIR:-$DEFAULT_ROOT/$SITE_ID}")"
+  if [[ "$MODE" == "full" ]]; then
+    : "${REMOTE_UPLOADS:?full モードには REMOTE_UPLOADS が必要です ($conf)}"
+    # REMOTE_UPLOADS はリモート上のパス。ローカル $HOME に展開しない。
+  fi
+  LABEL="${LABEL:-$SITE_ID}"
+}
+
+backup_db() {
+  local dest_sql="$1"
+  # shellcheck disable=SC1090
+  source "$DB_CREDENTIALS"
+  : "${REMOTE_DB_HOST:?}" "${REMOTE_DB_USER:?}" "${REMOTE_DB_PASSWORD:?}" "${REMOTE_DB_NAME:?}"
+
+  echo "→ DBダンプ中 (${SSH_HOST} / ${REMOTE_DB_NAME})..."
+  # パスワードはリモート側の引数。ローカル履歴には残さないよう ssh 経由のみ。
+  ssh -T "$SSH_HOST" \
+    "mysqldump --no-tablespaces -h $(printf %q "$REMOTE_DB_HOST") -u $(printf %q "$REMOTE_DB_USER") -p$(printf %q "$REMOTE_DB_PASSWORD") $(printf %q "$REMOTE_DB_NAME")" \
+    > "$dest_sql"
+  echo "  保存: $dest_sql ($(wc -c < "$dest_sql" | tr -d ' ') bytes)"
+}
+
+backup_uploads() {
+  local dest_uploads="$1"
+  mkdir -p "$dest_uploads"
+  echo "→ uploads 同期中 (${SSH_HOST}:${REMOTE_UPLOADS})..."
+  # macOS 標準の openrsync は --info=progress2 非対応。--progress なら Mac/WSL 両方可。
+  rsync -a --progress -e "ssh -T" \
+    "${SSH_HOST}:${REMOTE_UPLOADS}/" \
+    "${dest_uploads}/"
+  echo "  保存: $dest_uploads"
+}
+
+write_manifest() {
+  local dest="$1"
+  cat > "${dest}/manifest.txt" <<EOF
+site_id: ${SITE_ID}
+label: ${LABEL}
+mode: ${MODE}
+ssh_host: ${SSH_HOST}
+created_at: $(date '+%Y-%m-%d %H:%M:%S %z')
+destination: ${dest}
+db_credentials: ${DB_CREDENTIALS}
+remote_uploads: ${REMOTE_UPLOADS:-}
+hostname: $(hostname)
+EOF
+}
+
+# --- main ---
+
+if [[ ! -d "$SITES_DIR" ]]; then
+  echo "エラー: ${SITES_DIR} がありません。" >&2
+  exit 1
+fi
+
+[[ -z "$SITE_ID" ]] && prompt_site
+[[ -z "$MODE" ]] && prompt_mode
+
+if [[ "$MODE" != "db" && "$MODE" != "full" ]]; then
+  echo "エラー: --mode は db または full です。" >&2
+  exit 1
+fi
+
+load_site
+
+TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
+DEFAULT_DEST="${DEFAULT_BACKUP_DIR}/${TIMESTAMP}"
+if [[ -z "$DEST" ]]; then
+  if [[ -t 0 ]]; then
+    prompt_dest "$DEFAULT_DEST"
+  else
+    DEST="$DEFAULT_DEST"
+  fi
+else
+  DEST="$(expand_path "$DEST")"
+fi
+
+echo ""
+echo "======== 確認 ========"
+echo "サイト:   ${LABEL} (${SITE_ID})"
+echo "種類:     ${MODE}"
+echo "保存先:   ${DEST}"
+echo "SSH:      ${SSH_HOST}"
+if [[ "$MODE" == "full" ]]; then
+  echo "uploads:  ${REMOTE_UPLOADS}"
+fi
+echo "======================"
+
+if [[ "$YES" -ne 1 ]]; then
+  read -r -p "この内容でバックアップしますか？ [y/N]: " confirm
+  case "$confirm" in
+    y|Y|yes|YES) ;;
+    *) echo "キャンセルしました。"; exit 0 ;;
+  esac
+fi
+
+mkdir -p "$DEST"
+backup_db "${DEST}/database.sql"
+if [[ "$MODE" == "full" ]]; then
+  backup_uploads "${DEST}/uploads"
+fi
+write_manifest "$DEST"
+
+echo ""
+echo "完了: ${DEST}"
+echo "  - database.sql"
+[[ "$MODE" == "full" ]] && echo "  - uploads/"
+echo "  - manifest.txt"

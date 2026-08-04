@@ -7,6 +7,11 @@
 ```
 ~/.dotfiles/
 ├── setup.sh              ← 新PCでこれを実行
+├── bin/
+│   └── wp-backup         ← WPリモートバックアップ（対話CLI）
+├── config/wp-backup/
+│   └── site.example.conf ← サイト設定の見本
+├── docs/
 └── claude/
     ├── settings.json     ← Claude Code グローバル設定
     ├── skills/
@@ -17,6 +22,9 @@
         ├── known_marketplaces.json   ← マーケットプレイス一覧
         └── installed_plugins.json    ← インストール済みプラグイン一覧
 ```
+
+サイト実設定は Git 外: `~/.config/wp-backup/sites/*.conf`  
+バックアップ保存先デフォルト: `~/Backups/wp/`
 
 ## 新しいPCのセットアップ手順
 

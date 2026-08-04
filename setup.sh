@@ -100,6 +100,18 @@ if $IS_WSL; then
   echo ""
 fi
 
+echo "--- CLI (bin → ~/.local/bin) ---"
+mkdir -p "$HOME/.local/bin"
+shopt -s nullglob
+for bin_src in "$DOTFILES_DIR/bin"/*; do
+  [[ -f "$bin_src" ]] || continue
+  bin_name="$(basename "$bin_src")"
+  chmod +x "$bin_src"
+  link "$bin_src" "$HOME/.local/bin/$bin_name"
+done
+shopt -u nullglob
+echo ""
+
 echo "=== 完了 ==="
 echo ""
 echo "次のステップ:"
@@ -107,3 +119,4 @@ echo "  pluginは各環境で手動インストール:"
 echo "     /plugin install superpowers@claude-plugins-official"
 echo "     /plugin install arscontexta@agenticnotetaking  (vault プロジェクト内で)"
 echo "     /plugin install obsidian@obsidian-skills       (vault プロジェクト内で)"
+echo "  WPバックアップ: wp-backup（サイト設定は ~/.config/wp-backup/sites/）"
