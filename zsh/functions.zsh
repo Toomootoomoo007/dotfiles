@@ -17,12 +17,9 @@
 # 全変更を "update" でコミットして push する
 alias gpush="git add . && git commit -m \"update\" && git push"
 
-# --------------------------------------------------
-# Obsidian
-# --------------------------------------------------
-
-# 日記AIスクリプト
-alias diary="python /Users/aokitomohiro/Documents/Obsidian Vault/000-system/diary_ai.py"
+# 日記は Claude Code の /diary コマンド（claude/commands/diary.md）を使う。
+# 旧 `alias diary=".../000-system/diary_ai.py"` は参照先が消滅していたため
+# 2026-08-15 に削除した。
 
 # --------------------------------------------------
 # Claude Code

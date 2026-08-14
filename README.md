@@ -34,7 +34,6 @@
 |---|---|---|
 | `wp-backup` | リモートWPのDB/uploadsバックアップ（対話CLI） | `bin/wp-backup` |
 | `gpush` | `git add . && commit -m "update" && push` | `zsh/functions.zsh` |
-| `diary` | Obsidian の日記AIスクリプト | 〃 |
 | `claude-sync` | `~/.claude/skills` を dotfiles に同期して push | 〃 |
 | `gas-use <acct>` | clasp のログイン切替（personal/facil/church） | 〃 |
 | `gas-whoami` | 現在のGASアカウント確認 | 〃 |
