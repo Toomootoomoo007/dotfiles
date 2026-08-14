@@ -9,6 +9,8 @@
 ├── setup.sh              ← 新PCでこれを実行
 ├── bin/
 │   └── wp-backup         ← WPリモートバックアップ（対話CLI）
+├── zsh/
+│   └── functions.zsh     ← 自作コマンド（関数・エイリアス）
 ├── config/wp-backup/
 │   └── site.example.conf ← サイト設定の見本
 ├── docs/
@@ -26,16 +28,37 @@
 サイト実設定は Git 外: `~/.config/wp-backup/sites/*.conf`  
 バックアップ保存先デフォルト: `~/Backups/wp/`
 
+## 自作コマンド
+
+| コマンド | 内容 | 実体 |
+|---|---|---|
+| `wp-backup` | リモートWPのDB/uploadsバックアップ（対話CLI） | `bin/wp-backup` |
+| `gpush` | `git add . && commit -m "update" && push` | `zsh/functions.zsh` |
+| `diary` | Obsidian の日記AIスクリプト | 〃 |
+| `claude-sync` | `~/.claude/skills` を dotfiles に同期して push | 〃 |
+| `gas-use <acct>` | clasp のログイン切替（personal/facil/church） | 〃 |
+| `gas-whoami` | 現在のGASアカウント確認 | 〃 |
+| `g-form-master <acct> "<名前>"` | フォームマスターのスプレッドシート新規作成 | 〃 |
+| `g-form-push [acct]` | 既存マスターへコード配布 | 〃 |
+
+`zsh/functions.zsh` は `~/.zshrc` から `source` される（`setup.sh` が1行を追記）。  
+**`.zshrc` 本体は symlink しない** — PHP/pyenv/nvm 等のパスがマシン固有のため。  
+新しい自作コマンドは `.zshrc` に直書きせず `zsh/functions.zsh` に追加すること。
+
 ## 新しいPCのセットアップ手順
 
 ```bash
 # 1. このリポジトリをクローン
 git clone git@github.com:<username>/dotfiles.git ~/.dotfiles
 
-# 2. セットアップスクリプトを実行（シムリンクを張る）
+# 2. セットアップスクリプトを実行（シムリンク＋.zshrcへのsource追記）
 cd ~/.dotfiles
 chmod +x setup.sh
 ./setup.sh
+
+# 2-b. 自作コマンドを有効化して確認
+source ~/.zshrc
+type gas-use   # → shell function from ~/.dotfiles/zsh/functions.zsh と出れば成功
 
 # 3. Obsidian Vault をクローン（vault固有のスキル・フック・設定が入っている）
 git clone git@github.com:<username>/obsidian-vault.git ~/Documents/Obsidian\ Vault

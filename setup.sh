@@ -112,6 +112,24 @@ done
 shopt -u nullglob
 echo ""
 
+echo "--- zsh 自作コマンド (~/.zshrc から source) ---"
+ZSHRC="$HOME/.zshrc"
+SOURCE_LINE='[ -f ~/.dotfiles/zsh/functions.zsh ] && source ~/.dotfiles/zsh/functions.zsh'
+# .zshrc 自体はマシン固有（PHP/pyenv/nvm のパス等）なので symlink しない。
+# 自作コマンドを読み込む1行だけを追記する。
+touch "$ZSHRC"
+if grep -qF 'dotfiles/zsh/functions.zsh' "$ZSHRC"; then
+  echo "  skip (already sourced): $ZSHRC"
+else
+  {
+    echo ""
+    echo "# 自作コマンド（dotfiles管理: ~/.dotfiles/zsh/functions.zsh）"
+    echo "$SOURCE_LINE"
+  } >> "$ZSHRC"
+  echo "  added to: $ZSHRC"
+fi
+echo ""
+
 echo "=== 完了 ==="
 echo ""
 echo "次のステップ:"
@@ -120,3 +138,5 @@ echo "     /plugin install superpowers@claude-plugins-official"
 echo "     /plugin install arscontexta@agenticnotetaking  (vault プロジェクト内で)"
 echo "     /plugin install obsidian@obsidian-skills       (vault プロジェクト内で)"
 echo "  WPバックアップ: wp-backup（サイト設定は ~/.config/wp-backup/sites/）"
+echo "  自作コマンドを有効化: source ~/.zshrc （または新しいターミナルを開く）"
+echo "     確認: type gas-use  → 'gas-use is a shell function from .../functions.zsh'"
