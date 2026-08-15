@@ -16,14 +16,14 @@
 ├── docs/
 └── claude/
     ├── settings.json     ← Claude Code グローバル設定
-    ├── skills/
-    │   └── para-file-organizer/   ← グローバルスキル
     ├── commands/
     │   └── diary.md      ← カスタムコマンド
     └── plugins/
         ├── known_marketplaces.json   ← マーケットプレイス一覧
         └── installed_plugins.json    ← インストール済みプラグイン一覧
 ```
+
+Claude Code のスキルは **Obsidian Vault の `.claude/skills/`** に置き、Vault のリポジトリで管理する。dotfiles 側では持たない。
 
 サイト実設定は Git 外: `~/.config/wp-backup/sites/*.conf`  
 バックアップ保存先デフォルト: `~/Backups/wp/`
@@ -34,7 +34,6 @@
 |---|---|---|
 | `wp-backup` | リモートWPのDB/uploadsバックアップ（対話CLI） | `bin/wp-backup` |
 | `gpush ["メッセージ"]` | 全変更をコミットして push。対象を表示して `[y/N]` 確認。メッセージ省略時は `update` | `zsh/functions.zsh` |
-| `claude-sync` | `~/.claude/skills` を dotfiles に同期して push | 〃 |
 | `gas-use <acct>` | clasp のログイン切替（personal/facil/church） | 〃 |
 | `gas-whoami` | 現在のGASアカウント確認 | 〃 |
 | `g-form-master <acct> "<名前>"` | フォームマスターのスプレッドシート新規作成 | 〃 |

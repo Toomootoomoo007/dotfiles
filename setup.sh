@@ -69,11 +69,7 @@ echo "--- Claude Code 設定 (symlink) ---"
 link "$DOTFILES_DIR/claude/settings.json"                   "$CLAUDE_DIR/settings.json"
 link "$DOTFILES_DIR/claude/commands/diary.md"               "$CLAUDE_DIR/commands/diary.md"
 link "$DOTFILES_DIR/claude/plugins/known_marketplaces.json" "$CLAUDE_DIR/plugins/known_marketplaces.json"
-
-for skill_src in "$DOTFILES_DIR/claude/skills"/*/; do
-  skill_name=$(basename "$skill_src")
-  link "$skill_src" "$CLAUDE_DIR/skills/$skill_name"
-done
+# スキルは Obsidian Vault の .claude/skills/ で管理する（dotfiles では持たない）
 echo ""
 
 if $IS_WSL; then
@@ -87,11 +83,6 @@ if $IS_WSL; then
     win_copy "$DOTFILES_DIR/claude/settings.json"                   "$WIN_CLAUDE/settings.json"
     win_copy "$DOTFILES_DIR/claude/commands/diary.md"               "$WIN_CLAUDE/commands/diary.md"
     win_copy "$DOTFILES_DIR/claude/plugins/known_marketplaces.json" "$WIN_CLAUDE/plugins/known_marketplaces.json"
-
-    for skill_src in "$DOTFILES_DIR/claude/skills"/*/; do
-      skill_name=$(basename "$skill_src")
-      win_copy "$skill_src" "$WIN_CLAUDE/skills/$skill_name"
-    done
 
     echo "  同期先: $WIN_CLAUDE"
   else

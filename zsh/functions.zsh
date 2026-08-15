@@ -60,19 +60,11 @@ gpush() {
 # 旧 `alias diary=".../000-system/diary_ai.py"` は参照先が消滅していたため
 # 2026-08-15 に削除した。
 
-# --------------------------------------------------
-# Claude Code
-# --------------------------------------------------
-
-# Claude Code スキルを dotfiles に同期して GitHub に送る
-claude-sync() {
-  cp -r ~/.claude/skills/* ~/.dotfiles/claude/skills/
-  cd ~/.dotfiles
-  git add .
-  git commit -m "sync: claude skills"
-  git push
-  echo "✅ 同期完了"
-}
+# Claude Code のスキルは Obsidian Vault の .claude/skills/ に置き、
+# Vault のリポジトリで管理する。dotfiles 側では持たない。
+# 旧 `claude-sync`（~/.claude/skills → dotfiles にコピーして push）は
+# コピー元が空になっており、cp が失敗しても「✅ 同期完了」と表示する
+# 状態だったため 2026-08-15 に削除した。
 
 # ==================================================
 # tomo-gas-project: マルチアカウントclasp運用
