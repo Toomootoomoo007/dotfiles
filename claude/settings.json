@@ -18,5 +18,13 @@
     }
   },
   "theme": "auto",
-  "remoteControlAtStartup": true
+  "remoteControlAtStartup": true,
+  "permissions": {
+    "allow": [
+      "mcp__pencil"
+    ],
+    "additionalDirectories": [
+      "/Users/aokitomohiro/Documents/20_Websites"
+    ]
+  }
 }
