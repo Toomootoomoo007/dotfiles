@@ -33,7 +33,7 @@
 | コマンド | 内容 | 実体 |
 |---|---|---|
 | `wp-backup` | リモートWPのDB/uploadsバックアップ（対話CLI） | `bin/wp-backup` |
-| `gpush` | `git add . && commit -m "update" && push` | `zsh/functions.zsh` |
+| `gpush ["メッセージ"]` | 全変更をコミットして push。対象を表示して `[y/N]` 確認。メッセージ省略時は `update` | `zsh/functions.zsh` |
 | `claude-sync` | `~/.claude/skills` を dotfiles に同期して push | 〃 |
 | `gas-use <acct>` | clasp のログイン切替（personal/facil/church） | 〃 |
 | `gas-whoami` | 現在のGASアカウント確認 | 〃 |
@@ -43,6 +43,14 @@
 `zsh/functions.zsh` は `~/.zshrc` から `source` される（`setup.sh` が1行を追記）。  
 **`.zshrc` 本体は symlink しない** — PHP/pyenv/nvm 等のパスがマシン固有のため。  
 新しい自作コマンドは `.zshrc` に直書きせず `zsh/functions.zsh` に追加すること。
+
+### テスト
+
+```bash
+zsh zsh/tests/gpush-test.zsh
+```
+
+使い捨ての一時ディレクトリ（`mktemp -d`）だけを触るため、実リポジトリには影響しない。終了時に自動削除される。`functions.zsh` を変更したら流すこと。
 
 ## 新しいPCのセットアップ手順
 

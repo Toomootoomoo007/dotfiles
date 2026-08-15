@@ -14,8 +14,47 @@
 # Git
 # --------------------------------------------------
 
-# 全変更を "update" でコミットして push する
-alias gpush="git add . && git commit -m \"update\" && git push"
+# 全変更をコミットして push する
+#   gpush "メッセージ"   … メッセージを指定
+#   gpush                … メッセージ省略時は "update"
+# コミット前に対象ファイルを表示して [y/N] で確認する。
+gpush() {
+  local msg="${1:-update}"
+
+  git rev-parse --is-inside-work-tree >/dev/null 2>&1 \
+    || { echo "❌ gitリポジトリではありません"; return 1; }
+
+  local branch="$(git branch --show-current)"
+  [[ -z "$branch" ]] && { echo "❌ detached HEAD 状態です。ブランチに切り替えてください"; return 1; }
+
+  if [[ -z "$(git status --porcelain)" ]]; then
+    echo "変更はありません"
+    return 0
+  fi
+
+  echo "📋 コミット対象:"
+  git status --short
+  echo ""
+  echo "ブランチ:   $branch"
+  echo "メッセージ: $msg"
+  echo ""
+  printf "実行しますか? [y/N] "
+  local reply
+  read -r reply
+  [[ "$reply" == [yY] ]] || { echo "中止しました"; return 1; }
+
+  git add -A           || { echo "❌ git add に失敗しました";    return 1; }
+  git commit -m "$msg" || { echo "❌ git commit に失敗しました"; return 1; }
+
+  if git rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1; then
+    git push || { echo "❌ git push に失敗しました"; return 1; }
+  else
+    echo "upstream 未設定 → -u を付けて push します"
+    git push -u origin "$branch" || { echo "❌ git push に失敗しました"; return 1; }
+  fi
+
+  echo "✅ 完了: $branch ← \"$msg\""
+}
 
 # 日記は Claude Code の /diary コマンド（claude/commands/diary.md）を使う。
 # 旧 `alias diary=".../000-system/diary_ai.py"` は参照先が消滅していたため
